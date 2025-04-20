@@ -1,13 +1,14 @@
 package ai.momoyeyu.figspace.model.vo;
 
 import lombok.Data;
+
 import java.util.Date;
 
 /**
  * 用户
  */
 @Data
-public class LoginUserVO {
+public class UserVO {
     /**
      * id
      */
@@ -39,14 +40,14 @@ public class LoginUserVO {
     private String userRole;
 
     /**
+     * 编辑时间
+     */
+    private Date editTime;
+
+    /**
      * 创建时间
      */
     private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
 
     private static final long serialVersionUID = 1L;
 }

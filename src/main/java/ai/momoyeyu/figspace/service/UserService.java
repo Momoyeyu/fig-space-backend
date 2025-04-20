@@ -1,9 +1,14 @@
 package ai.momoyeyu.figspace.service;
 
+import ai.momoyeyu.figspace.model.dto.user.UserQueryRequest;
 import ai.momoyeyu.figspace.model.entity.User;
 import ai.momoyeyu.figspace.model.vo.LoginUserVO;
+import ai.momoyeyu.figspace.model.vo.UserVO;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
 
 /**
 * @author Momoyeyu
@@ -50,6 +55,23 @@ public interface UserService extends IService<User> {
      * @return 是否退出成功
      */
     boolean userLogout(HttpServletRequest request);
+
+    /**
+     * 获取脱敏后的用户信息
+     * @param user 用户实例
+     * @return 脱敏后的用户信息
+     */
+    UserVO getUserVO(User user);
+
+    /**
+     * 数据脱敏：获取脱敏后的用户信息列表
+     * @param userList 用户信息列表
+     * @return 脱敏后的用户信息列表
+     */
+    List<UserVO> getUserVOList(List<User> userList);
+
+
+    QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 
     /**
      * 密码加盐加密
