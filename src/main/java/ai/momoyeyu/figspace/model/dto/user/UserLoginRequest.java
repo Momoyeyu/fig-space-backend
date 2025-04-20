@@ -1,13 +1,16 @@
-package ai.momoyeyu.figspace.model.dto;
+package ai.momoyeyu.figspace.model.dto.user;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @Data
 public class UserLoginRequest implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -3120494648992906539L;
+
     /**
      * 账号
      */
