@@ -88,12 +88,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return loginUserVO;
     }
 
-    /**
-     * 对密码加盐加密
-     *
-     * @param password 用户密码
-     * @return 加盐加密后的密码
-     */
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        // 先判断是否已登录
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null || currentUser.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        // 从数据库查询（追求性能的话可以注释，直接返回上述结果）
+        currentUser = this.getById(currentUser.getId());
+        ThrowUtils.throwIf(currentUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        return currentUser;
+    }
+
+    @Override
+    public boolean userLogout(HttpServletRequest request) {
+        // 1. 判断是否已登录
+        ThrowUtils.throwIf(request.getSession().getAttribute(USER_LOGIN_STATE) == null,
+                ErrorCode.NOT_LOGIN_ERROR);
+        // 2. 移除登录态
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        return true;
+    }
+
     @Override
     public String getEncryptPassword(String password) {
         final String salt = "momoyeyu";

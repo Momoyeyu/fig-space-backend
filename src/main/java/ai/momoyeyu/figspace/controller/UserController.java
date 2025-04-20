@@ -1,5 +1,6 @@
 package ai.momoyeyu.figspace.controller;
 
+import ai.momoyeyu.figspace.annotation.AuthCheck;
 import ai.momoyeyu.figspace.common.BaseResponse;
 import ai.momoyeyu.figspace.common.ResultUtils;
 import ai.momoyeyu.figspace.exception.ErrorCode;
@@ -44,5 +45,15 @@ public class UserController {
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         return ResultUtils.success(userService.userLogin(userAccount, userPassword, request));
+    }
+
+    /**
+     * 用户退出登录
+     * @param request request
+     * @return 退出是否成功
+     */
+    @PostMapping("/logout")
+    public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
+        return ResultUtils.success(userService.userLogout(request));
     }
 }
