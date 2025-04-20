@@ -1,0 +1,106 @@
+package ai.momoyeyu.figspace.service.impl;
+
+import ai.momoyeyu.figspace.exception.BusinessException;
+import ai.momoyeyu.figspace.exception.ErrorCode;
+import ai.momoyeyu.figspace.exception.ThrowUtils;
+import ai.momoyeyu.figspace.model.vo.LoginUserVO;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import ai.momoyeyu.figspace.model.entity.User;
+import ai.momoyeyu.figspace.service.UserService;
+import ai.momoyeyu.figspace.mapper.UserMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
+
+import static ai.momoyeyu.figspace.constant.UserConstant.USER_LOGIN_STATE;
+
+/**
+* @author Momoyeyu
+* @description 针对表【user(用户)】的数据库操作Service实现
+* @createDate 2025-04-20 17:18:16
+*/
+@Service
+public class UserServiceImpl extends ServiceImpl<UserMapper, User>
+    implements UserService{
+
+    @Override
+    public Long userRegister(String userAccount, String userPassword, String checkPassword) {
+        // 1. 检查输入合法性
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, userPassword, checkPassword), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(userPassword.length() < 8, ErrorCode.PARAMS_ERROR, "password too short");
+        ThrowUtils.throwIf(!userPassword.equals(checkPassword), ErrorCode.PARAMS_ERROR, "two passwords do not match");
+
+        // 2. 检查是否重复（用户账号已存在）
+        boolean exist = this.lambdaQuery()
+                .eq(User::getUserAccount, userAccount)
+                .exists();
+        ThrowUtils.throwIf(exist, ErrorCode.OPERATION_ERROR, "account already used");
+
+        // 3. 密码加密
+        String encryptedPassword = getEncryptPassword(userPassword);
+
+        // 4. 插入新用户数据
+        User user = new User();
+        user.setUserAccount(userAccount);
+        user.setUserPassword(encryptedPassword);
+        user.setUserName("Noname"); // by default
+        boolean result = this.save(user);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "DATABASE ERROR: fail to register user");
+        return user.getId();
+    }
+
+    @Override
+    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+        // 1. 输入校验
+        ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, userPassword), ErrorCode.PARAMS_ERROR, "account or password is blank");
+        ThrowUtils.throwIf(userPassword.length() < 8, ErrorCode.PARAMS_ERROR, "password too short");
+
+        // 2. 密码加密
+        String encryptedPassword = getEncryptPassword(userPassword);
+
+        // 3. 用户查询
+        User loginUser = this.lambdaQuery()
+                .eq(User::getUserAccount, userAccount)
+                .eq(User::getUserPassword, encryptedPassword)
+                .one();
+        if (loginUser == null) {
+            // 日志尽量用英文：减小开销
+            log.error("user login fail: userAccount can not match userPassword");
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "wrong account or password");
+        }
+        // 4. 记录用户登录状态（Session）
+        request.getSession().setAttribute(USER_LOGIN_STATE, loginUser);
+
+        // 5. 返回用户
+        return this.getLoginUserVO(loginUser);
+    }
+
+    @Override
+    public LoginUserVO getLoginUserVO(User loginUser) {
+        if (loginUser == null) {
+            return null;
+        }
+        LoginUserVO loginUserVO = new LoginUserVO();
+        // Spring 实现的方法，将对应属性拷贝
+        BeanUtils.copyProperties(loginUser, loginUserVO);
+        return loginUserVO;
+    }
+
+    /**
+     * 对密码加盐加密
+     *
+     * @param password 用户密码
+     * @return 加盐加密后的密码
+     */
+    @Override
+    public String getEncryptPassword(String password) {
+        final String salt = "momoyeyu";
+        return DigestUtils.md5DigestAsHex((password + salt).getBytes());
+    }
+}
+
+
+
+
