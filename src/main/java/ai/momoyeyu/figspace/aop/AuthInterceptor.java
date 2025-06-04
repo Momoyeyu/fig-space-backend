@@ -12,7 +12,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springdoc.core.service.RequestBodyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -25,6 +24,8 @@ public class AuthInterceptor {
     @Resource
     private UserService userService;
     @Autowired
+
+    @Resource
     private RequestBodyService requestBodyBuilder;
 
     @Around("@annotation(authCheck)")
