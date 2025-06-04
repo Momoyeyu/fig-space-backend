@@ -23,7 +23,6 @@ public class AuthInterceptor {
 
     @Resource
     private UserService userService;
-    @Autowired
 
     @Resource
     private RequestBodyService requestBodyBuilder;
