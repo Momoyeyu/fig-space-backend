@@ -3,6 +3,8 @@ server:
   servlet:
     context-path: /api
 spring:
+  profiles:
+    active: local
   application:
     name: fig-space-backend
   datasource:
@@ -10,6 +12,12 @@ spring:
     url: jdbc:mysql://localhost:3306/fig_space
     username: root
     password: 123456
+  data:
+    redis:
+      database: 0
+      host: 127.0.0.1
+      port: 6379
+      connect-timeout: 5000
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false

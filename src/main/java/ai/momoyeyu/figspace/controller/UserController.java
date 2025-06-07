@@ -13,8 +13,12 @@ import ai.momoyeyu.figspace.model.vo.LoginUserVO;
 import ai.momoyeyu.figspace.model.vo.UserVO;
 import ai.momoyeyu.figspace.service.UserService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +51,7 @@ public class UserController {
      * @return 用户VO
      */
     @PostMapping("/login")
+    @Parameter(name = "UserLoginRequest", example = "{ 'userAccount': 'momoyeyu', 'userPassword', '12345678'}")
     public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = userLoginRequest.getUserAccount();

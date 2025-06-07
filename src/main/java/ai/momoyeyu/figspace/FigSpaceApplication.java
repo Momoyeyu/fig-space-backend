@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @MapperScan("ai.momoyeyu.figspace.mapper")
-public class FigSpaceBackendApplication {
+public class FigSpaceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FigSpaceBackendApplication.class, args);
+        SpringApplication.run(FigSpaceApplication.class, args);
     }
 
 }
