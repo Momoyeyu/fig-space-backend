@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ai.momoyeyu.figspace.mapper.FigureMapper">
+
+    <resultMap id="BaseResultMap" type="ai.momoyeyu.figspace.model.entity.Figure">
+            <id property="id" column="id" />
+            <result property="url" column="url" />
+            <result property="name" column="name" />
+            <result property="intro" column="intro" />
+            <result property="category" column="category" />
+            <result property="tags" column="tags" />
+            <result property="figSize" column="figSize" />
+            <result property="figWidth" column="figWidth" />
+            <result property="figHeight" column="figHeight" />
+            <result property="figScale" column="figScale" />
+            <result property="figFormat" column="figFormat" />
+            <result property="userId" column="userId" />
+            <result property="createTime" column="createTime" />
+            <result property="editTime" column="editTime" />
+            <result property="updateTime" column="updateTime" />
+            <result property="isDelete" column="isDelete" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,url,name,intro,category,tags,
+        figSize,figWidth,figHeight,figScale,figFormat,
+        userId,createTime,editTime,updateTime,isDelete
+    </sql>
+</mapper>

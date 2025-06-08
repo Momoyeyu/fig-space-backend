@@ -2,6 +2,8 @@ package ai.momoyeyu.figspace.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
@@ -11,7 +13,7 @@ import lombok.Data;
  */
 @TableName(value ="user")
 @Data
-public class User {
+public class User implements Serializable {
     /**
      * id
      */
@@ -70,6 +72,7 @@ public class User {
     // @TableLogic注解的value属性指定了逻辑未删除的值（0），而delval属性指定了逻辑删除的值（1）。
     private Integer isDelete;
 
+    @Serial
     @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -5569485107521417987L;
 }

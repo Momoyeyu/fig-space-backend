@@ -29,7 +29,7 @@ create table if not exists figure
     tags        varchar(512)            null comment '标签：JSON数组',
     figSize     bigint                  null comment '图片大小',
     figWidth    int                     null comment '图片宽度',
-    figHight    int                     null comment '图片高度',
+    figHeight    int                     null comment '图片高度',
     figScale    double                  null comment '图片宽高比',
     figFormat   varchar(32)             null comment '图片格式',
     userId      bigint                  not null comment '用户 id',
