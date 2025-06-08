@@ -7,6 +7,7 @@ import ai.momoyeyu.figspace.constant.UserConstant;
 import ai.momoyeyu.figspace.exception.BusinessException;
 import ai.momoyeyu.figspace.exception.ErrorCode;
 import ai.momoyeyu.figspace.manager.CosManager;
+import ai.momoyeyu.figspace.manager.FileManager;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.COSObjectInputStream;
 import com.qcloud.cos.utils.IOUtils;
@@ -46,13 +47,7 @@ public class FileController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
         } finally {
             // 4. 删除临时文件
-            if (file != null) {
-                // delete temp file
-                boolean delete = file.delete();
-                if (!delete) {
-                    log.error("file delete error, filepath = {}", filepath);
-                }
-            }
+            FileManager.deleteTemporalFile(file);
         }
     }
 
