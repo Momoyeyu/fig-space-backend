@@ -6,7 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 @Data
-public class UploadRequest implements Serializable {
+public class FigureUploadRequest implements Serializable {
 
     private Long id;
 

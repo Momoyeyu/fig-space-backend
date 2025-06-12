@@ -18,6 +18,10 @@ spring:
       host: 127.0.0.1
       port: 6379
       connect-timeout: 5000
+  servlet:
+    multipart:
+      # servlet 默认大小为 1MB，可适当扩大
+      max-file-size: 10MB
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false

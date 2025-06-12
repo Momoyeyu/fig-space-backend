@@ -56,14 +56,14 @@ public class FileManager {
         try {
             file = File.createTempFile(uploadPath, null);
             multipartFile.transferTo(file);
-            PutObjectResult putObjectResult = cosManager.putObject(uploadPath, file);
+            PutObjectResult putObjectResult = cosManager.putFigureObject(uploadPath, file);
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             int figWidth = imageInfo.getWidth();
             int figHeight = imageInfo.getHeight();
             double figScale = NumberUtil.round((double) figWidth / figHeight, 2).doubleValue();
             UploadFigureResult uploadFigureResult = new UploadFigureResult();
             uploadFigureResult.setUrl(cosClientConfig.getHost() + "/" + uploadPath);
-            uploadFigureResult.setFigName(FileUtil.mainName(originalFilename));
+            uploadFigureResult.setName(FileUtil.mainName(originalFilename));
             uploadFigureResult.setFigSize(FileUtil.size(file));
             uploadFigureResult.setFigWidth(figWidth);
             uploadFigureResult.setFigHeight(figHeight);

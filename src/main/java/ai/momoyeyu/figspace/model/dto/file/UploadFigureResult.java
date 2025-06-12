@@ -10,7 +10,7 @@ public class UploadFigureResult implements Serializable {
 
     private String url;
 
-    private String figName;
+    private String name;
 
     private Long figSize;
 
