@@ -4,6 +4,7 @@ import ai.momoyeyu.figspace.exception.BusinessException;
 import ai.momoyeyu.figspace.exception.ErrorCode;
 import ai.momoyeyu.figspace.exception.ThrowUtils;
 import ai.momoyeyu.figspace.model.dto.user.UserQueryRequest;
+import ai.momoyeyu.figspace.model.enums.UserRoleEnum;
 import ai.momoyeyu.figspace.model.vo.LoginUserVO;
 import ai.momoyeyu.figspace.model.vo.UserVO;
 import cn.hutool.core.collection.CollUtil;
@@ -171,6 +172,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public String getEncryptPassword(String password) {
         final String salt = "momoyeyu";
         return DigestUtils.md5DigestAsHex((password + salt).getBytes());
+    }
+
+    @Override
+    public boolean isAdmin(User user) {
+        return user != null && UserRoleEnum.ADMIN.equals(UserRoleEnum.getEnumByValue(user.getUserRole()));
     }
 }
 

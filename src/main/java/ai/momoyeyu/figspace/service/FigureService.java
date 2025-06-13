@@ -1,10 +1,14 @@
 package ai.momoyeyu.figspace.service;
 
+import ai.momoyeyu.figspace.model.dto.figure.FigureQueryRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
 import ai.momoyeyu.figspace.model.entity.Figure;
 import ai.momoyeyu.figspace.model.entity.User;
 import ai.momoyeyu.figspace.model.vo.FigureVO;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -15,12 +19,40 @@ import org.springframework.web.multipart.MultipartFile;
 public interface FigureService extends IService<Figure> {
 
     /**
-     * 上传文件
-     * @param file 文件
+     * 上传图片
+     * @param file 图片文件
      * @param figureUploadRequest 上传请求
      * @param user 用户信息
-     * @return 上传结果
+     * @return 脱敏后的图片数据
      */
     FigureVO uploadFigure(MultipartFile file, FigureUploadRequest figureUploadRequest, User user);
 
+    /**
+     * 获取查询的 QueryWrapper
+     * @param figureQueryRequest 查询条件
+     * @return QueryWrapper
+     */
+    QueryWrapper<Figure> getFigureQueryWrapper(FigureQueryRequest figureQueryRequest);
+
+    /**
+     * 图片脱敏时关联用户
+     * @param figure 图片
+     * @param request 请求
+     * @return 图片脱敏
+     */
+    FigureVO getFigureVO(Figure figure, HttpServletRequest request);
+
+    /**
+     * 获取脱敏后的分页图片数据
+     * @param page 图片分页原始数据
+     * @param request 用户的servlet请求
+     * @return 脱敏后的图片分页数据
+     */
+    Page<FigureVO> getFigureVOPage(Page<Figure> page, HttpServletRequest request);
+
+    /**
+     * 校验图片信息合法性
+     * @param figure 图片信息
+     */
+    void validFigure(Figure figure);
 }

@@ -79,4 +79,6 @@ public interface UserService extends IService<User> {
      * @return 加盐加密密码
      */
     String getEncryptPassword(String password);
+
+    boolean isAdmin(User user);
 }
