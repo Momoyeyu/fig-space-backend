@@ -45,10 +45,9 @@ public interface FigureService extends IService<Figure> {
     /**
      * 获取脱敏后的分页图片数据
      * @param page 图片分页原始数据
-     * @param request 用户的servlet请求
      * @return 脱敏后的图片分页数据
      */
-    Page<FigureVO> getFigureVOPage(Page<Figure> page, HttpServletRequest request);
+    Page<FigureVO> getFigureVOPage(Page<Figure> page);
 
     /**
      * 校验图片信息合法性

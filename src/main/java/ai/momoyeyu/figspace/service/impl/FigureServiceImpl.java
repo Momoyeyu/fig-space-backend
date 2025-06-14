@@ -22,10 +22,8 @@ import ai.momoyeyu.figspace.mapper.FigureMapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -131,7 +129,7 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
     }
 
     @Override
-    public Page<FigureVO> getFigureVOPage(Page<Figure> figurePage, HttpServletRequest request) {
+    public Page<FigureVO> getFigureVOPage(Page<Figure> figurePage) {
         List<Figure> figureList = figurePage.getRecords();
         Page<FigureVO> figureVOPage = new Page<>(figurePage.getCurrent(), figurePage.getSize(), figurePage.getTotal());
         if (CollectionUtils.isEmpty(figureList)) {

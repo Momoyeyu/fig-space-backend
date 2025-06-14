@@ -1,13 +1,14 @@
 package ai.momoyeyu.figspace.model.dto.figure;
-
+import ai.momoyeyu.figspace.common.PageRequest;
 import lombok.Data;
-
+import lombok.EqualsAndHashCode;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 @Data
-public class FigureQueryRequest implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class FigureQueryRequest extends PageRequest implements Serializable {
 
     /**
      * id
@@ -63,6 +64,21 @@ public class FigureQueryRequest implements Serializable {
      * 搜索词
      */
     private String searchText;
+
+    /**
+     * 状态：0-待审核; 1-通过; 2-拒绝
+     */
+    private Integer reviewStatus;
+
+    /**
+     * 审核信息
+     */
+    private String reviewMessage;
+
+    /**
+     * 审核人 id
+     */
+    private Long reviewerId;
 
     /**
      * 用户 id

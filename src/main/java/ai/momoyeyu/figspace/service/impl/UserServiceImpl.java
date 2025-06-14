@@ -41,16 +41,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, userPassword, checkPassword), ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(userPassword.length() < 8, ErrorCode.PARAMS_ERROR, "password too short");
         ThrowUtils.throwIf(!userPassword.equals(checkPassword), ErrorCode.PARAMS_ERROR, "two passwords do not match");
-
         // 2. 检查是否重复（用户账号已存在）
         boolean exist = this.lambdaQuery()
                 .eq(User::getUserAccount, userAccount)
                 .exists();
         ThrowUtils.throwIf(exist, ErrorCode.OPERATION_ERROR, "account already used");
-
         // 3. 密码加密
         String encryptedPassword = getEncryptPassword(userPassword);
-
         // 4. 插入新用户数据
         User user = new User();
         user.setUserAccount(userAccount);
@@ -66,10 +63,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1. 输入校验
         ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, userPassword), ErrorCode.PARAMS_ERROR, "account or password is blank");
         ThrowUtils.throwIf(userPassword.length() < 8, ErrorCode.PARAMS_ERROR, "password too short");
-
         // 2. 密码加密
         String encryptedPassword = getEncryptPassword(userPassword);
-
         // 3. 用户查询
         User loginUser = this.lambdaQuery()
                 .eq(User::getUserAccount, userAccount)
@@ -82,7 +77,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 4. 记录用户登录状态（Session）
         request.getSession().setAttribute(USER_LOGIN_STATE, loginUser);
-
         // 5. 返回用户
         return this.getLoginUserVO(loginUser);
     }
