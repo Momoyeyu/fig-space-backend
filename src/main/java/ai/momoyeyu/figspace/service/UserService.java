@@ -7,6 +7,7 @@ import ai.momoyeyu.figspace.model.vo.UserVO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
 
@@ -33,7 +34,8 @@ public interface UserService extends IService<User> {
      * @param request 请求
      * @return 用户VO
      */
-    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    LoginUserVO userLogin(String userAccount, String userPassword,
+                          HttpServletRequest request, HttpServletResponse response);
 
     /**
      * 获取用户VO
@@ -80,5 +82,10 @@ public interface UserService extends IService<User> {
      */
     String getEncryptPassword(String password);
 
+    /**
+     * 验证用户是否是管理员
+     * @param user 用户信息
+     * @return 验证结果
+     */
     boolean isAdmin(User user);
 }

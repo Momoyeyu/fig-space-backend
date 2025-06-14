@@ -12,7 +12,5 @@ public interface UserConstant {
 
     String ADMIN_ROLE = "admin";
 
-    String DEFAULT_ROLE = "user_default_role";
-
-
+    String AUTHORIZATION_HEADER = "Authorization";
 }

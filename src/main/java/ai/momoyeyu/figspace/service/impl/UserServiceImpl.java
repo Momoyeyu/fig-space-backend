@@ -1,5 +1,6 @@
 package ai.momoyeyu.figspace.service.impl;
 
+import ai.momoyeyu.figspace.constant.UserConstant;
 import ai.momoyeyu.figspace.exception.BusinessException;
 import ai.momoyeyu.figspace.exception.ErrorCode;
 import ai.momoyeyu.figspace.exception.ThrowUtils;
@@ -7,6 +8,7 @@ import ai.momoyeyu.figspace.model.dto.user.UserQueryRequest;
 import ai.momoyeyu.figspace.model.enums.UserRoleEnum;
 import ai.momoyeyu.figspace.model.vo.LoginUserVO;
 import ai.momoyeyu.figspace.model.vo.UserVO;
+import ai.momoyeyu.figspace.utils.JwtUtils;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -15,16 +17,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ai.momoyeyu.figspace.model.entity.User;
 import ai.momoyeyu.figspace.service.UserService;
 import ai.momoyeyu.figspace.mapper.UserMapper;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static ai.momoyeyu.figspace.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
 * @author Momoyeyu
@@ -34,6 +35,9 @@ import static ai.momoyeyu.figspace.constant.UserConstant.USER_LOGIN_STATE;
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService{
+
+    @Resource
+    private JwtUtils jwtUtils;
 
     @Override
     public Long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -59,13 +63,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
-        // 1. 输入校验
+    public LoginUserVO userLogin(String userAccount, String userPassword,
+                                 HttpServletRequest request, HttpServletResponse response) {
+        // 输入校验
         ThrowUtils.throwIf(!StrUtil.isAllNotBlank(userAccount, userPassword), ErrorCode.PARAMS_ERROR, "account or password is blank");
         ThrowUtils.throwIf(userPassword.length() < 8, ErrorCode.PARAMS_ERROR, "password too short");
-        // 2. 密码加密
+        // 密码加密
         String encryptedPassword = getEncryptPassword(userPassword);
-        // 3. 用户查询
+        // 用户查询
         User loginUser = this.lambdaQuery()
                 .eq(User::getUserAccount, userAccount)
                 .eq(User::getUserPassword, encryptedPassword)
@@ -75,9 +80,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             log.error("user login fail: userAccount can not match userPassword");
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "wrong account or password");
         }
-        // 4. 记录用户登录状态（Session）
-        request.getSession().setAttribute(USER_LOGIN_STATE, loginUser);
-        // 5. 返回用户
+        // 记录用户登录状态（Session）
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, loginUser);
+        // JWT Token
+        String token = jwtUtils.generateToken(loginUser.getUserAccount());
+        response.setHeader(UserConstant.AUTHORIZATION_HEADER, token);
         return this.getLoginUserVO(loginUser);
     }
 
@@ -95,7 +102,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         User currentUser = (User) userObj;
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
@@ -109,10 +116,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public boolean userLogout(HttpServletRequest request) {
         // 1. 判断是否已登录
-        ThrowUtils.throwIf(request.getSession().getAttribute(USER_LOGIN_STATE) == null,
+        ThrowUtils.throwIf(request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE) == null,
                 ErrorCode.NOT_LOGIN_ERROR);
         // 2. 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        // TODO: 移除JWT token
         return true;
     }
 

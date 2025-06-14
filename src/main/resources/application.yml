@@ -35,3 +35,7 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+jwt:
+  secret: "fig-space-backend_w4r2xH^o#JUz3rx28HG15g1"
+  expiration: 86400000 # 令牌过期时间，单位为毫秒（此处时间长度为一周）
+
