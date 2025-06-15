@@ -11,6 +11,11 @@ public class FigureUploadByBatchRequest {
     private String searchText;
 
     /**
+     * 名称前缀
+     */
+    private String namePrefix;
+
+    /**
      * 搜索数量（默认为10）
      */
     private Integer count = 10;

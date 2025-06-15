@@ -18,6 +18,11 @@ public class FigureUploadRequest implements Serializable {
      */
     private String fileUrl;
 
+    /**
+     * 指定图片名称
+     */
+    private String figName;
+
     @Serial
     private static final long serialVersionUID = -4771949453181150579L;
 

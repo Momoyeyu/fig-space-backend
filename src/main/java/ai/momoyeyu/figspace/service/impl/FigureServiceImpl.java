@@ -28,7 +28,6 @@ import ai.momoyeyu.figspace.mapper.FigureMapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.exception.ExtCertPathBuilderException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -36,7 +35,6 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -65,17 +63,21 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         // check params
         ThrowUtils.throwIf(ObjectUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
         ThrowUtils.throwIf(ObjectUtil.isNull(inputSource), ErrorCode.PARAMS_ERROR);
-        // update or upload
-        Long figureId = null;
-        if (figureUploadRequest != null) {
-            figureId = figureUploadRequest.getId();
-        }
-        if (figureId != null) { // check update
-            Figure figure = this.getById(figureId);
+        // 判断是更新旧图片还是新上传图片
+        Figure figure;
+        Long figureId = figureUploadRequest == null ? null : figureUploadRequest.getId();
+        if (figureId != null) { // 更新旧图片，校验图片是否存在以及是否有权限更新
+            figure = this.getById(figureId);
+            // 校验图片是否存在
             ThrowUtils.throwIf(figure == null, ErrorCode.NOT_FOUND_ERROR);
+            // 只有管理员和图片所有者可以更新
             ThrowUtils.throwIf(!userService.isAdmin(user) && !figure.getUserId().equals(user.getId()), ErrorCode.NO_AUTH_ERROR);
+        } else { // 新上传
+            figure = new Figure();
+            // 设置图片所有者
+            figure.setUserId(user.getId());
         }
-        // 按照用户 ID 划分目录
+        // 构建上传路径：按照用户 ID 划分目录
         String uploadPathPrefix = String.format("public/%s", user.getId());
         // 根据 inputSource 的类型区分上传方式
         FigureUploadTemplate figureUploadTemplate;
@@ -88,17 +90,16 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         }
         // 上传图片
         UploadFigureResult uploadFigureResult = figureUploadTemplate.uploadFigure(inputSource, uploadPathPrefix);
-        Figure figure = new Figure();
         BeanUtils.copyProperties(uploadFigureResult, figure);
-        figure.setUserId(user.getId());
-        // write id if update
-        if (figureId != null) {
-            figure.setId(figureId);
-            figure.setEditTime(new Date());
+        // 设置用户指定的图片名称
+        if (figureUploadRequest != null) {
+            figure.setName(figureUploadRequest.getFigName());
         }
         // 设置默认审核信息
         this.fillDefaultReview(figure, user);
-        // write database
+        // 更新编辑时间
+        figure.setEditTime(new Date());
+        // 更新数据库
         boolean res = this.saveOrUpdate(figure);
         ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "图片上传失败：数据库错误");
         return FigureVO.objToVo(figure);
@@ -241,6 +242,12 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         ThrowUtils.throwIf(ObjectUtil.isNull(figureUploadByBatchRequest), ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(!userService.isAdmin(user), ErrorCode.NO_AUTH_ERROR);
         String searchText = figureUploadByBatchRequest.getSearchText();
+        ThrowUtils.throwIf(StringUtils.isEmpty(searchText), ErrorCode.PARAMS_ERROR, "搜索词不能为空");
+        String namePrefix = figureUploadByBatchRequest.getNamePrefix();
+        // 默认的名称对应搜索词
+        if (StringUtils.isEmpty(namePrefix)) {
+            namePrefix = searchText;
+        }
         Integer count = figureUploadByBatchRequest.getCount();
         // 图片搜去（通过bing）
         String fetchUrl = String.format("https://cn.bing.com/images/async?q=%s&mmasync=1", searchText);
@@ -273,6 +280,7 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
             // 调用图片上传服务
             FigureUploadRequest figureUploadRequest = new FigureUploadRequest();
             try {
+                figureUploadRequest.setFigName(namePrefix + (uploadCount + 1));
                 FigureVO figureVO = this.uploadFigure(url, figureUploadRequest, user);
                 log.info("图片已上传，ID：{}", figureVO.getId());
                 uploadCount++;
