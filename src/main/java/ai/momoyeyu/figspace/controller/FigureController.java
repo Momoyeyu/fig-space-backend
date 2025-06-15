@@ -61,7 +61,8 @@ public class FigureController {
      * @return 上传结果
      */
     @PostMapping("/upload/url")
-    public BaseResponse<FigureVO> uploadFigure(@RequestBody FigureUploadRequest figureUploadRequest, HttpServletRequest request) {
+    public BaseResponse<FigureVO> uploadFigure(
+            @RequestBody FigureUploadRequest figureUploadRequest, HttpServletRequest request) {
         User user = userService.getLoginUser(request);
         String url = figureUploadRequest.getFileUrl();
         FigureVO figureVO = figureService.uploadFigure(url, figureUploadRequest, user);
@@ -69,7 +70,8 @@ public class FigureController {
     }
 
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteFigure(@RequestPart DeleteRequest deleteRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteFigure(
+            @RequestPart DeleteRequest deleteRequest, HttpServletRequest request) {
         // check params
         ThrowUtils.throwIf(deleteRequest == null || deleteRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
         long figureId = deleteRequest.getId();
@@ -78,7 +80,8 @@ public class FigureController {
         // check role
         User loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
-        ThrowUtils.throwIf(!figure.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(!figure.getUserId().equals(loginUser.getId())
+                && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
         // database
         boolean res = figureService.removeById(figureId);
         ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "删除图片失败");
@@ -87,14 +90,17 @@ public class FigureController {
 
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updateFigure(@RequestBody FigureUpdateRequest figureUpdateRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> updateFigure(
+            @RequestBody FigureUpdateRequest figureUpdateRequest, HttpServletRequest request) {
         // check params
-        ThrowUtils.throwIf(figureUpdateRequest == null || figureUpdateRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(figureUpdateRequest == null
+                || figureUpdateRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
         Figure figure = figureService.getById(figureUpdateRequest.getId());
         ThrowUtils.throwIf(figure == null, ErrorCode.NOT_FOUND_ERROR);
         // check auth: 只有管理员和图片所有者可以更改
         User user = userService.getLoginUser(request);
-        ThrowUtils.throwIf(!userService.isAdmin(user) && !figure.getUserId().equals(user.getId()), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(!userService.isAdmin(user)
+                && !figure.getUserId().equals(user.getId()), ErrorCode.NO_AUTH_ERROR);
         // apply changes
         BeanUtils.copyProperties(figureUpdateRequest, figure);
         figure.setTags(JSONUtil.toJsonStr(figureUpdateRequest.getTags()));
@@ -121,7 +127,8 @@ public class FigureController {
     public BaseResponse<Page<Figure>> listFigureByPage(@RequestBody FigureQueryRequest figureQueryRequest) {
         long current = figureQueryRequest.getCurrent();
         long size = figureQueryRequest.getPageSize();
-        Page<Figure> figurePage = figureService.page(new Page<>(current, size), figureService.getFigureQueryWrapper(figureQueryRequest));
+        Page<Figure> figurePage = figureService.page(
+                new Page<>(current, size), figureService.getFigureQueryWrapper(figureQueryRequest));
         return ResultUtils.success(figurePage);
     }
 
@@ -134,7 +141,8 @@ public class FigureController {
     }
 
     @PostMapping("/list/page/vo")
-    public BaseResponse<Page<FigureVO>> listFigureVOByPage(@RequestBody FigureQueryRequest figureQueryRequest, HttpServletRequest request) {
+    public BaseResponse<Page<FigureVO>> listFigureVOByPage(
+            @RequestBody FigureQueryRequest figureQueryRequest, HttpServletRequest request) {
         // check auth
         User loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
@@ -145,20 +153,24 @@ public class FigureController {
         // query
         long current = figureQueryRequest.getCurrent();
         long size = figureQueryRequest.getPageSize();
-        Page<Figure> figurePage = figureService.page(new Page<>(current, size), figureService.getFigureQueryWrapper(figureQueryRequest));
+        Page<Figure> figurePage = figureService.page(
+                new Page<>(current, size), figureService.getFigureQueryWrapper(figureQueryRequest));
         return ResultUtils.success(figureService.getFigureVOPage(figurePage));
     }
 
     @PostMapping("/edit")
-    public BaseResponse<Boolean> updateFigure(@RequestBody FigureEditRequest figureEditRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> updateFigure(
+            @RequestBody FigureEditRequest figureEditRequest,HttpServletRequest request) {
         // check params
-        ThrowUtils.throwIf(figureEditRequest == null || figureEditRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(figureEditRequest == null
+                || figureEditRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
         Figure figure = figureService.getById(figureEditRequest.getId());
         ThrowUtils.throwIf(figure == null, ErrorCode.NOT_FOUND_ERROR);
         // check role
         User loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
-        ThrowUtils.throwIf(!figure.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(!figure.getUserId().equals(loginUser.getId())
+                && !userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
         // apply changes
         BeanUtils.copyProperties(figureEditRequest, figure);
         figure.setTags(JSONUtil.toJsonStr(figureEditRequest.getTags()));
@@ -182,12 +194,27 @@ public class FigureController {
 
     @PostMapping("/review")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> review(@RequestBody FigureReviewRequest figureReviewRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> review(
+            @RequestBody FigureReviewRequest figureReviewRequest, HttpServletRequest request) {
         // check params
         ThrowUtils.throwIf(figureReviewRequest == null, ErrorCode.PARAMS_ERROR);
         User reviewer = userService.getLoginUser(request);
         figureService.reviewFigure(figureReviewRequest, reviewer);
         return ResultUtils.success(true);
+    }
+
+    /**
+     * 【管理员】批量导入图片
+     * @param figureUploadByBatchRequest 批量导入请求
+     * @return 成功导入的图片数量
+     */
+    @PostMapping("/upload/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Integer> uploadFigureByBatch(
+            @RequestBody FigureUploadByBatchRequest figureUploadByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(figureUploadByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(figureService.uploadFigureByBatch(figureUploadByBatchRequest, loginUser));
     }
 
 }

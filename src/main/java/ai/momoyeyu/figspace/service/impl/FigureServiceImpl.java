@@ -8,6 +8,7 @@ import ai.momoyeyu.figspace.manager.upload.FileFigureUpload;
 import ai.momoyeyu.figspace.manager.upload.UrlFigureUpload;
 import ai.momoyeyu.figspace.model.dto.figure.FigureQueryRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureReviewRequest;
+import ai.momoyeyu.figspace.model.dto.figure.FigureUploadByBatchRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
 import ai.momoyeyu.figspace.model.dto.file.UploadFigureResult;
 import ai.momoyeyu.figspace.model.entity.User;
@@ -26,9 +27,17 @@ import ai.momoyeyu.figspace.service.FigureService;
 import ai.momoyeyu.figspace.mapper.FigureMapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.jce.exception.ExtCertPathBuilderException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,6 +47,7 @@ import java.util.stream.Collectors;
 * @createDate 2025-06-08 21:51:29
 */
 @Service
+@Slf4j
 public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
     implements FigureService{
 
@@ -223,6 +233,58 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         } else {
             figure.setReviewStatus(FigureReviewStatus.REVIEW);
         }
+    }
+
+    @Override
+    public Integer uploadFigureByBatch(FigureUploadByBatchRequest figureUploadByBatchRequest, User user) {
+        // check params
+        ThrowUtils.throwIf(ObjectUtil.isNull(figureUploadByBatchRequest), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(!userService.isAdmin(user), ErrorCode.NO_AUTH_ERROR);
+        String searchText = figureUploadByBatchRequest.getSearchText();
+        Integer count = figureUploadByBatchRequest.getCount();
+        // 图片搜去（通过bing）
+        String fetchUrl = String.format("https://cn.bing.com/images/async?q=%s&mmasync=1", searchText);
+        Document document;
+        try {
+            document = Jsoup.connect(fetchUrl).get();
+        } catch (IOException e) {
+            log.error("获取页面失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取页面失败");
+        }
+        Element div = document.getElementsByClass("dgControl").first();
+        if (ObjectUtil.isNull(div)) {
+            log.error("获取元素失败");
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
+        }
+        Elements imgElementList = div.select("img.mimg");
+        int uploadCount = 0;
+        for (Element imgElement : imgElementList) {
+            String url = imgElement.attr("src");
+            // 判空
+            if (StringUtils.isNotBlank(url)) {
+                log.info("当前链接为空，已跳过：{}", url);
+                continue;
+            }
+            // 处理地址：去除条件，防止转义
+            int questionMarkIndex = url.lastIndexOf("?");
+            if (questionMarkIndex != -1) {
+                url = url.substring(0, questionMarkIndex);
+            }
+            // 调用图片上传服务
+            FigureUploadRequest figureUploadRequest = new FigureUploadRequest();
+            try {
+                FigureVO figureVO = this.uploadFigure(url, figureUploadRequest, user);
+                log.info("图片已上传，ID：{}", figureVO.getId());
+                uploadCount++;
+            } catch (Exception e) {
+                log.error("图片上传失败", e);
+            }
+            // 判断数量是否达标
+            if (uploadCount >= count) {
+                break;
+            }
+        }
+        return uploadCount;
     }
 }
 

@@ -2,6 +2,7 @@ package ai.momoyeyu.figspace.service;
 
 import ai.momoyeyu.figspace.model.dto.figure.FigureQueryRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureReviewRequest;
+import ai.momoyeyu.figspace.model.dto.figure.FigureUploadByBatchRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
 import ai.momoyeyu.figspace.model.entity.Figure;
 import ai.momoyeyu.figspace.model.entity.User;
@@ -68,4 +69,12 @@ public interface FigureService extends IService<Figure> {
      * @param user 用户信息
      */
     void fillDefaultReview(Figure figure, User user);
+
+    /**
+     * 批量抓取并图片
+     * @param figureUploadByBatchRequest 批量抓取请求
+     * @param user 操作用户
+     * @return 抓取并上传成功的图片数量
+     */
+    Integer uploadFigureByBatch(FigureUploadByBatchRequest figureUploadByBatchRequest, User user);
 }
