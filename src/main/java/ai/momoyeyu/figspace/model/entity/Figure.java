@@ -1,5 +1,6 @@
 package ai.momoyeyu.figspace.model.entity;
 
+import ai.momoyeyu.figspace.model.enums.FigureReviewStatus;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serial;
@@ -119,4 +120,8 @@ public class Figure implements Serializable {
     @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = -8089126954078596189L;
+
+    public void setReviewStatus(FigureReviewStatus reviewStatus) {
+        this.reviewStatus = reviewStatus.getValue();
+    }
 }

@@ -62,4 +62,11 @@ public interface FigureService extends IService<Figure> {
      * @param reviewer 审核者
      */
     void reviewFigure(FigureReviewRequest figureReviewRequest, User reviewer);
+
+    /**
+     * 填充默认审核参数
+     * @param figure 图片
+     * @param user 用户信息
+     */
+    void fillDefaultReview(Figure figure, User user);
 }

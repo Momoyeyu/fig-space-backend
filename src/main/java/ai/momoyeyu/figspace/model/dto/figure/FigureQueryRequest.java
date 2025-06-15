@@ -1,5 +1,6 @@
 package ai.momoyeyu.figspace.model.dto.figure;
 import ai.momoyeyu.figspace.common.PageRequest;
+import ai.momoyeyu.figspace.model.enums.FigureReviewStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.io.Serial;
@@ -87,4 +88,12 @@ public class FigureQueryRequest extends PageRequest implements Serializable {
 
     @Serial
     private static final long serialVersionUID = -8089126954078596189L;
+
+    public void setReviewStatus(Integer reviewStatus) {
+        this.reviewStatus = reviewStatus;
+    }
+
+    public void setReviewStatus(FigureReviewStatus reviewStatus) {
+        this.reviewStatus = reviewStatus.getValue();
+    }
 }

@@ -9,6 +9,7 @@ import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
 import ai.momoyeyu.figspace.model.dto.file.UploadFigureResult;
 import ai.momoyeyu.figspace.model.entity.User;
 import ai.momoyeyu.figspace.model.enums.FigureReviewStatus;
+import ai.momoyeyu.figspace.model.enums.UserRoleEnum;
 import ai.momoyeyu.figspace.model.vo.FigureVO;
 import ai.momoyeyu.figspace.model.vo.UserVO;
 import ai.momoyeyu.figspace.service.UserService;
@@ -55,10 +56,9 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
             figureId = figureUploadRequest.getId();
         }
         if (figureId != null) { // check update
-            boolean exists = this.lambdaQuery()
-                    .eq(Figure::getId, figureId)
-                    .exists();
-            ThrowUtils.throwIf(!exists, ErrorCode.NOT_FOUND_ERROR);
+            Figure figure = this.getById(figureId);
+            ThrowUtils.throwIf(figure == null, ErrorCode.NOT_FOUND_ERROR);
+            ThrowUtils.throwIf(!userService.isAdmin(user) && !figure.getUserId().equals(user.getId()), ErrorCode.NO_AUTH_ERROR);
         }
         String uploadPathPrefix = String.format("public/%s", user.getId());
         UploadFigureResult uploadFigureResult = fileManager.uploadFigure(file, uploadPathPrefix);
@@ -70,6 +70,8 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
             figure.setId(figureId);
             figure.setEditTime(new Date());
         }
+        // 设置默认审核信息
+        this.fillDefaultReview(figure, user);
         // write database
         boolean res = this.saveOrUpdate(figure);
         ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR, "图片上传失败：数据库错误");
@@ -95,6 +97,9 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         String figFormat = figureQueryRequest.getFigFormat();
         String searchText = figureQueryRequest.getSearchText();
         Long userId = figureQueryRequest.getUserId();
+        Integer reviewStatus = figureQueryRequest.getReviewStatus();
+        String reviewMessage = figureQueryRequest.getReviewMessage();
+        Long reviewerId = figureQueryRequest.getReviewerId();
         if (StringUtils.isNotBlank(searchText)) {
             queryWrapper
                     .and(qw -> qw.like("name", searchText)
@@ -115,6 +120,10 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         queryWrapper.eq(ObjectUtil.isNotNull(figScale), "figScale", figScale);
         queryWrapper.eq(StringUtils.isNotBlank(figFormat), "figFormat", figFormat);
         queryWrapper.eq(ObjectUtil.isNotNull(userId), "userId", userId);
+        // 匹配审核信息
+        queryWrapper.eq(ObjectUtil.isNotNull(reviewStatus), "reviewStatus", reviewStatus);
+        queryWrapper.eq(StringUtils.isNotBlank(reviewMessage), "reviewMessage", reviewMessage);
+        queryWrapper.eq(ObjectUtil.isNotNull(reviewerId), "reviewerId", reviewerId);
         return queryWrapper;
     }
 
@@ -180,12 +189,24 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         FigureReviewStatus currentStatus = FigureReviewStatus.fromValue(figure.getReviewStatus());
         ThrowUtils.throwIf(currentStatus.equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
         // write data
-        figure.setReviewStatus(reviewStatus.getValue());
+        figure.setReviewStatus(reviewStatus);
         figure.setReviewMessage(reviewMessage);
         figure.setReviewTime(new Date());
         figure.setReviewerId(reviewer.getId());
         boolean res = this.updateById(figure);
         ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR);
+    }
+
+    @Override
+    public void fillDefaultReview(Figure figure, User user) {
+        if (userService.isAdmin(user)) {
+            figure.setReviewStatus(FigureReviewStatus.ACCEPT);
+            figure.setReviewerId(user.getId());
+            figure.setReviewMessage("管理员自动过审");
+            figure.setReviewTime(new Date());
+        } else {
+            figure.setReviewStatus(FigureReviewStatus.REVIEW);
+        }
     }
 }
 

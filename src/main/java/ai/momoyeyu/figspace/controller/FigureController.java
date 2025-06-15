@@ -10,6 +10,7 @@ import ai.momoyeyu.figspace.exception.ThrowUtils;
 import ai.momoyeyu.figspace.model.dto.figure.*;
 import ai.momoyeyu.figspace.model.entity.Figure;
 import ai.momoyeyu.figspace.model.entity.User;
+import ai.momoyeyu.figspace.model.enums.FigureReviewStatus;
 import ai.momoyeyu.figspace.model.vo.FigureTagCategory;
 import ai.momoyeyu.figspace.model.vo.FigureVO;
 import ai.momoyeyu.figspace.service.FigureService;
@@ -36,7 +37,6 @@ public class FigureController {
     @Resource
     private FigureService figureService;
 
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/upload")
     public BaseResponse<FigureVO> uploadFigure(
             @RequestPart("file") MultipartFile multipartFile,
@@ -64,16 +64,21 @@ public class FigureController {
         return ResultUtils.success(true);
     }
 
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/update")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateFigure(@RequestBody FigureUpdateRequest figureUpdateRequest, HttpServletRequest request) {
         // check params
         ThrowUtils.throwIf(figureUpdateRequest == null || figureUpdateRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
         Figure figure = figureService.getById(figureUpdateRequest.getId());
         ThrowUtils.throwIf(figure == null, ErrorCode.NOT_FOUND_ERROR);
+        // check auth: 只有管理员和图片所有者可以更改
+        User user = userService.getLoginUser(request);
+        ThrowUtils.throwIf(!userService.isAdmin(user) && !figure.getUserId().equals(user.getId()), ErrorCode.NO_AUTH_ERROR);
         // apply changes
         BeanUtils.copyProperties(figureUpdateRequest, figure);
         figure.setTags(JSONUtil.toJsonStr(figureUpdateRequest.getTags()));
+        // 设置默认审核信息:
+        figureService.fillDefaultReview(figure, user);
         // database
         figureService.validFigure(figure);
         boolean res = figureService.updateById(figure);
@@ -108,7 +113,15 @@ public class FigureController {
     }
 
     @PostMapping("/list/page/vo")
-    public BaseResponse<Page<FigureVO>> listFigureVOByPage(@RequestBody FigureQueryRequest figureQueryRequest) {
+    public BaseResponse<Page<FigureVO>> listFigureVOByPage(@RequestBody FigureQueryRequest figureQueryRequest, HttpServletRequest request) {
+        // check auth
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        // 非管理员用户只能查看过审的图片
+        if (!userService.isAdmin(loginUser)) {
+            figureQueryRequest.setReviewStatus(FigureReviewStatus.ACCEPT);
+        }
+        // query
         long current = figureQueryRequest.getCurrent();
         long size = figureQueryRequest.getPageSize();
         Page<Figure> figurePage = figureService.page(new Page<>(current, size), figureService.getFigureQueryWrapper(figureQueryRequest));
@@ -129,6 +142,8 @@ public class FigureController {
         BeanUtils.copyProperties(figureEditRequest, figure);
         figure.setTags(JSONUtil.toJsonStr(figureEditRequest.getTags()));
         figure.setEditTime(new Date());
+        // 设置默认审核信息
+        figureService.fillDefaultReview(figure, loginUser);
         // database
         figureService.validFigure(figure);
         boolean res = figureService.updateById(figure);
