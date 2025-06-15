@@ -1,0 +1,13 @@
+# 重命名为 application-local.yml 来进行本地配置
+cos:
+  client:
+    bucket: xxx
+    secret-id: xxx
+    secret-key: xxx
+    host: xxx
+    region: xxx
+
+spring:
+  datasource:
+    username: xxx
+    password: xxx
