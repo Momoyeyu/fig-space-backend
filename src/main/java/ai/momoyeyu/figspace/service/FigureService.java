@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
 * @author momoyeyu
@@ -21,12 +20,12 @@ public interface FigureService extends IService<Figure> {
 
     /**
      * 上传图片
-     * @param file 图片文件
+     * @param inputSource 图片上传源：MultipartFile file/String url
      * @param figureUploadRequest 上传请求
      * @param user 用户信息
      * @return 脱敏后的图片数据
      */
-    FigureVO uploadFigure(MultipartFile file, FigureUploadRequest figureUploadRequest, User user);
+    FigureVO uploadFigure(Object inputSource, FigureUploadRequest figureUploadRequest, User user);
 
     /**
      * 获取查询的 QueryWrapper

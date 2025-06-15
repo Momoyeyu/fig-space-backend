@@ -1,15 +1,17 @@
 package ai.momoyeyu.figspace.service.impl;
 
+import ai.momoyeyu.figspace.exception.BusinessException;
 import ai.momoyeyu.figspace.exception.ErrorCode;
 import ai.momoyeyu.figspace.exception.ThrowUtils;
-import ai.momoyeyu.figspace.manager.FileManager;
+import ai.momoyeyu.figspace.manager.upload.FigureUploadTemplate;
+import ai.momoyeyu.figspace.manager.upload.FileFigureUpload;
+import ai.momoyeyu.figspace.manager.upload.UrlFigureUpload;
 import ai.momoyeyu.figspace.model.dto.figure.FigureQueryRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureReviewRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
 import ai.momoyeyu.figspace.model.dto.file.UploadFigureResult;
 import ai.momoyeyu.figspace.model.entity.User;
 import ai.momoyeyu.figspace.model.enums.FigureReviewStatus;
-import ai.momoyeyu.figspace.model.enums.UserRoleEnum;
 import ai.momoyeyu.figspace.model.vo.FigureVO;
 import ai.momoyeyu.figspace.model.vo.UserVO;
 import ai.momoyeyu.figspace.service.UserService;
@@ -40,16 +42,19 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
     implements FigureService{
 
     @Resource
-    private FileManager fileManager;
+    private FileFigureUpload fileFigureUpload;
+
+    @Resource
+    private UrlFigureUpload urlFigureUpload;
 
     @Resource
     private UserService userService;
 
     @Override
-    public FigureVO uploadFigure(MultipartFile file, FigureUploadRequest figureUploadRequest, User user) {
+    public FigureVO uploadFigure(Object inputSource, FigureUploadRequest figureUploadRequest, User user) {
         // check params
         ThrowUtils.throwIf(ObjectUtil.isNull(user), ErrorCode.NO_AUTH_ERROR);
-        ThrowUtils.throwIf(ObjectUtil.isNull(file), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(ObjectUtil.isNull(inputSource), ErrorCode.PARAMS_ERROR);
         // update or upload
         Long figureId = null;
         if (figureUploadRequest != null) {
@@ -60,8 +65,19 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
             ThrowUtils.throwIf(figure == null, ErrorCode.NOT_FOUND_ERROR);
             ThrowUtils.throwIf(!userService.isAdmin(user) && !figure.getUserId().equals(user.getId()), ErrorCode.NO_AUTH_ERROR);
         }
+        // 按照用户 ID 划分目录
         String uploadPathPrefix = String.format("public/%s", user.getId());
-        UploadFigureResult uploadFigureResult = fileManager.uploadFigure(file, uploadPathPrefix);
+        // 根据 inputSource 的类型区分上传方式
+        FigureUploadTemplate figureUploadTemplate;
+        if (inputSource instanceof String) {
+            figureUploadTemplate = urlFigureUpload;
+        } else if (inputSource instanceof MultipartFile) {
+            figureUploadTemplate = fileFigureUpload;
+        } else {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持该上传方式");
+        }
+        // 上传图片
+        UploadFigureResult uploadFigureResult = figureUploadTemplate.uploadFigure(inputSource, uploadPathPrefix);
         Figure figure = new Figure();
         BeanUtils.copyProperties(uploadFigureResult, figure);
         figure.setUserId(user.getId());

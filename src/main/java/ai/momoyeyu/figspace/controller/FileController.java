@@ -7,7 +7,7 @@ import ai.momoyeyu.figspace.constant.UserConstant;
 import ai.momoyeyu.figspace.exception.BusinessException;
 import ai.momoyeyu.figspace.exception.ErrorCode;
 import ai.momoyeyu.figspace.manager.CosManager;
-import ai.momoyeyu.figspace.manager.FileManager;
+import ai.momoyeyu.figspace.manager.upload.FigureUploadTemplate;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.COSObjectInputStream;
 import com.qcloud.cos.utils.IOUtils;
@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 
 
@@ -47,7 +46,7 @@ public class FileController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
         } finally {
             // 4. 删除临时文件
-            FileManager.deleteTemporalFile(file);
+            FigureUploadTemplate.deleteTempFile(file);
         }
     }
 

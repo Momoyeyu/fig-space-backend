@@ -29,6 +29,7 @@ import java.util.List;
 
 @Slf4j
 @Service
+@Deprecated
 public class FileManager {
 
     private static final long ONE_MB = 1024 * 1024;
@@ -57,7 +58,7 @@ public class FileManager {
         // 2. 文件上传地址
         String uuid = UUID.randomUUID().toString();
         String originalFilename = multipartFile.getOriginalFilename();
-        String uploadFilename = String.format("%s_%s_%s", DateUtil.formatDate(new Date()), uuid, originalFilename);
+        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid, originalFilename);
         String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
         // 3. 解析结果并返回
         File file = null;

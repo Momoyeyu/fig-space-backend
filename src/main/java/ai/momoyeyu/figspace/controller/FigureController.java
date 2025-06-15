@@ -37,6 +37,13 @@ public class FigureController {
     @Resource
     private FigureService figureService;
 
+    /**
+     * 通过文件上传图片
+     * @param multipartFile 图片文件
+     * @param figureUploadRequest 上传请求
+     * @param request 请求上下文
+     * @return 上传结果
+     */
     @PostMapping("/upload")
     public BaseResponse<FigureVO> uploadFigure(
             @RequestPart("file") MultipartFile multipartFile,
@@ -44,6 +51,20 @@ public class FigureController {
             HttpServletRequest request) {
         User user = userService.getLoginUser(request);
         FigureVO figureVO = figureService.uploadFigure(multipartFile, figureUploadRequest, user);
+        return ResultUtils.success(figureVO);
+    }
+
+    /**
+     * 通过URL方式上传图片
+     * @param figureUploadRequest 文件上传请求
+     * @param request 请求上下文
+     * @return 上传结果
+     */
+    @PostMapping("/upload/url")
+    public BaseResponse<FigureVO> uploadFigure(@RequestBody FigureUploadRequest figureUploadRequest, HttpServletRequest request) {
+        User user = userService.getLoginUser(request);
+        String url = figureUploadRequest.getFileUrl();
+        FigureVO figureVO = figureService.uploadFigure(url, figureUploadRequest, user);
         return ResultUtils.success(figureVO);
     }
 
