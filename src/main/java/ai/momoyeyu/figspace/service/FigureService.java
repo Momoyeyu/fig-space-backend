@@ -1,6 +1,7 @@
 package ai.momoyeyu.figspace.service;
 
 import ai.momoyeyu.figspace.model.dto.figure.FigureQueryRequest;
+import ai.momoyeyu.figspace.model.dto.figure.FigureReviewRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
 import ai.momoyeyu.figspace.model.entity.Figure;
 import ai.momoyeyu.figspace.model.entity.User;
@@ -54,4 +55,11 @@ public interface FigureService extends IService<Figure> {
      * @param figure 图片信息
      */
     void validFigure(Figure figure);
+
+    /**
+     * 【管理员】审核图片
+     * @param figureReviewRequest 审核请求
+     * @param reviewer 审核者
+     */
+    void reviewFigure(FigureReviewRequest figureReviewRequest, User reviewer);
 }

@@ -4,9 +4,11 @@ import ai.momoyeyu.figspace.exception.ErrorCode;
 import ai.momoyeyu.figspace.exception.ThrowUtils;
 import ai.momoyeyu.figspace.manager.FileManager;
 import ai.momoyeyu.figspace.model.dto.figure.FigureQueryRequest;
+import ai.momoyeyu.figspace.model.dto.figure.FigureReviewRequest;
 import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
 import ai.momoyeyu.figspace.model.dto.file.UploadFigureResult;
 import ai.momoyeyu.figspace.model.entity.User;
+import ai.momoyeyu.figspace.model.enums.FigureReviewStatus;
 import ai.momoyeyu.figspace.model.vo.FigureVO;
 import ai.momoyeyu.figspace.model.vo.UserVO;
 import ai.momoyeyu.figspace.service.UserService;
@@ -160,6 +162,30 @@ public class FigureServiceImpl extends ServiceImpl<FigureMapper, Figure>
         if (StringUtils.isNotBlank(intro)) {
             ThrowUtils.throwIf(intro.length() > 800, ErrorCode.PARAMS_ERROR, "图片简介过长");
         }
+    }
+
+    @Override
+    public void reviewFigure(FigureReviewRequest figureReviewRequest, User reviewer) {
+        // check params
+        ThrowUtils.throwIf(figureReviewRequest == null, ErrorCode.PARAMS_ERROR);
+        Long id = figureReviewRequest.getId();
+        FigureReviewStatus reviewStatus = FigureReviewStatus.fromValue(figureReviewRequest.getReviewStatus());
+        String reviewMessage = figureReviewRequest.getReviewMessage();
+        ThrowUtils.throwIf(!ObjectUtil.isAllNotEmpty(id, reviewStatus), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(reviewStatus.equals(FigureReviewStatus.REVIEW), ErrorCode.PARAMS_ERROR, "非法审核状态");
+        // check figure
+        Figure figure = this.getById(id);
+        ThrowUtils.throwIf(ObjectUtil.isNull(figure), ErrorCode.PARAMS_ERROR);
+        // 检查审核
+        FigureReviewStatus currentStatus = FigureReviewStatus.fromValue(figure.getReviewStatus());
+        ThrowUtils.throwIf(currentStatus.equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
+        // write data
+        figure.setReviewStatus(reviewStatus.getValue());
+        figure.setReviewMessage(reviewMessage);
+        figure.setReviewTime(new Date());
+        figure.setReviewerId(reviewer.getId());
+        boolean res = this.updateById(figure);
+        ThrowUtils.throwIf(!res, ErrorCode.OPERATION_ERROR);
     }
 }
 

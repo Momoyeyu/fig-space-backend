@@ -7,10 +7,7 @@ import ai.momoyeyu.figspace.common.ResultUtils;
 import ai.momoyeyu.figspace.constant.UserConstant;
 import ai.momoyeyu.figspace.exception.ErrorCode;
 import ai.momoyeyu.figspace.exception.ThrowUtils;
-import ai.momoyeyu.figspace.model.dto.figure.FigureEditRequest;
-import ai.momoyeyu.figspace.model.dto.figure.FigureQueryRequest;
-import ai.momoyeyu.figspace.model.dto.figure.FigureUpdateRequest;
-import ai.momoyeyu.figspace.model.dto.figure.FigureUploadRequest;
+import ai.momoyeyu.figspace.model.dto.figure.*;
 import ai.momoyeyu.figspace.model.entity.Figure;
 import ai.momoyeyu.figspace.model.entity.User;
 import ai.momoyeyu.figspace.model.vo.FigureTagCategory;
@@ -145,6 +142,16 @@ public class FigureController {
         figureTagCategory.setTagList(Arrays.asList("背景", "人像", "绘画"));
         figureTagCategory.setCategoryList(Arrays.asList("照片", "表情", "素材"));
         return ResultUtils.success(figureTagCategory);
+    }
+
+    @PostMapping("/review")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> review(@RequestBody FigureReviewRequest figureReviewRequest, HttpServletRequest request) {
+        // check params
+        ThrowUtils.throwIf(figureReviewRequest == null, ErrorCode.PARAMS_ERROR);
+        User reviewer = userService.getLoginUser(request);
+        figureService.reviewFigure(figureReviewRequest, reviewer);
+        return ResultUtils.success(true);
     }
 
 }
